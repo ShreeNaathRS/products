@@ -23,7 +23,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ github.ref == 'refs/heads/master' && secrets.EC2_HOST || secrets.EC2_HOST_DEV }} << 'EOF'
             cd ${{ secrets.APP_DIR }}
-            git pull origin main
+            git pull origin development
             mvn clean package -DskipTests
             sudo systemctl restart springboot-app
           EOF
