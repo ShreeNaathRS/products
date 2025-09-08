@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - development
 
 jobs:
   deploy:
@@ -16,11 +17,11 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.EC2_KEY }}
+          ssh-private-key: ${{ github.ref == 'refs/heads/master' && secrets.EC2_KEY || secrets.EC2_KEY_DEV }}
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ github.ref == 'refs/heads/master' && secrets.EC2_HOST || secrets.EC2_HOST_DEV }} << 'EOF'
             cd ${{ secrets.APP_DIR }}
             git pull origin main
             mvn clean package -DskipTests
