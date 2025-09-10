@@ -57,7 +57,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("https://di4swtaomhkuw.cloudfront.net", "http://localhost:2536"));
+        config.setAllowedOrigins(Arrays.asList("https://di4swtaomhkuw.cloudfront.net", "https://d1z1itk4l6nnzb.cloudfront.net", "http://localhost:2536"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         config.setAllowCredentials(true); 
