@@ -10,6 +10,7 @@ public class APIConstants {
 			add("/products");
 			add("/category");
 			add("/sub-category");
+			add("/payment/create-order");
 		}
 	};
 }
