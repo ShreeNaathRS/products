@@ -10,12 +10,15 @@ import org.springframework.stereotype.Component;
 import com.swiftcart.products.entity.CategoryEntity;
 import com.swiftcart.products.entity.LoginRoleEntity;
 import com.swiftcart.products.entity.LoginUserEntity;
+import com.swiftcart.products.entity.ProductEntity;
 import com.swiftcart.products.entity.SubCategoryEntity;
 import com.swiftcart.products.repo.LoginUserRepo;
+import com.swiftcart.products.repo.ProductRepo;
 import com.swiftcart.products.repo.SubCategoryRepo;
 import com.swiftcart.products.service.CategoryService;
 import com.swiftcart.products.service.LoginRoleService;
 import com.swiftcart.products.service.LoginUserService;
+import com.swiftcart.products.service.ProductService;
 import com.swiftcart.products.service.SubCategoryService;
 
 @Component
@@ -38,6 +41,12 @@ public class DataInitializer implements CommandLineRunner{
 	
 	@Autowired
 	CategoryService categoryService;
+	
+	@Autowired
+	ProductService productService;
+	
+	@Autowired
+	ProductRepo productrepo;
 	
 	@Override
 	public void run(String... str) throws Exception {
@@ -75,6 +84,16 @@ public class DataInitializer implements CommandLineRunner{
 			subCategoryService.createSubCategory(beanBag);
 			SubCategoryEntity shoeRack = new SubCategoryEntity(null, "Shoe Racks", "/shoe-rack.jpg", furniture);
 			subCategoryService.createSubCategory(shoeRack);
+		}
+		if(productrepo.count()==0) {
+			ProductEntity product = new ProductEntity();
+			product.setCategory(1L);
+			product.setCompany("Nilkamal");
+			product.setDesc("SLEEP Lite Dual Comfort 5 Inch Mattress | 10 Year Warranty");
+			product.setImageUrl("/nilkamal.jpg");
+			product.setPrice(4569.00);
+			product.setSubCategory(1L);
+			productService.createProduct(product);
 		}
 		
 	}

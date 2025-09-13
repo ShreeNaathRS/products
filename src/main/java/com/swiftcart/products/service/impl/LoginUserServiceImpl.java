@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.swiftcart.products.dto.CustomUserDetails;
 import com.swiftcart.products.entity.LoginUserEntity;
 import com.swiftcart.products.repo.LoginUserRepo;
 import com.swiftcart.products.service.LoginUserService;
@@ -33,14 +34,19 @@ public class LoginUserServiceImpl implements LoginUserService, UserDetailsServic
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//		LoginUserEntity user = loginUserRepo.findByname(username);
+//		if (user == null) {
+//			throw new UsernameNotFoundException("User not present in db");
+//		}
+//		Collection<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+//				.map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+//
+//		return new User(user.getName(), user.getPassword(), authorities);
 		LoginUserEntity user = loginUserRepo.findByname(username);
-		if (user == null) {
-			throw new UsernameNotFoundException("User not present in db");
-		}
-		Collection<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-				.map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
-
-		return new User(user.getName(), user.getPassword(), authorities);
+	    if (user == null) {
+	        throw new UsernameNotFoundException("User not present in db");
+	    }
+	    return new CustomUserDetails(user);
 	}
 	
 	

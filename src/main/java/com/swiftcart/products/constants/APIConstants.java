@@ -11,6 +11,7 @@ public class APIConstants {
 			add("/category");
 			add("/sub-category");
 			add("/payment/create-order");
+			add("/orders");
 		}
 	};
 }

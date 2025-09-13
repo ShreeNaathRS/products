@@ -76,11 +76,11 @@ public class WebSecurityConfig {
                     .csrf().disable()
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
-                    .authorizeRequests();
-        for (String endpoint : APIConstants.ALLOWED_END_POINTS) {
-            authRegistry.antMatchers(endpoint).permitAll();
-        }
-        authRegistry.anyRequest().authenticated();
+                    .authorizeRequests().anyRequest().permitAll();
+//        for (String endpoint : APIConstants.ALLOWED_END_POINTS) {
+//            authRegistry.antMatchers().permitAll();
+//        }
+//        authRegistry.anyRequest().authenticated();
         http.addFilter(authenticationFilter)
             .addFilterBefore(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();

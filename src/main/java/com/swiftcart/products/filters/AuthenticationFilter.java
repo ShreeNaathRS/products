@@ -23,6 +23,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiftcart.products.dto.AuthDTO;
+import com.swiftcart.products.dto.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,7 +44,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
 			Authentication authResult) throws IOException, ServletException {
-		User user = (User) authResult.getPrincipal();
+		CustomUserDetails user = (CustomUserDetails) authResult.getPrincipal();
+		Long userId = user.getUserId();
 		Algorithm algorithm = Algorithm.HMAC256("Shree-secretKey".getBytes());
 		String token = JWT.create().withSubject(user.getUsername())
 				.withExpiresAt(new Date(System.currentTimeMillis() + (4*60 * 60 * 1000)))
@@ -51,7 +53,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				.withClaim("roles",
 						user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
 				.sign(algorithm);
-		AuthDTO auth = new AuthDTO(user.getUsername(),user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
+		AuthDTO auth = new AuthDTO(userId, user.getUsername(),user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setStatus(HttpStatus.OK.value());
 	    ObjectMapper mapper = new ObjectMapper();
