@@ -7,6 +7,7 @@ public class APIConstants {
 	public static final List<String> ALLOWED_END_POINTS = new ArrayList<String>() {
 		{
 			add("/token");
+			add("/login");
 			add("/products");
 			add("/category");
 			add("/sub-category");
