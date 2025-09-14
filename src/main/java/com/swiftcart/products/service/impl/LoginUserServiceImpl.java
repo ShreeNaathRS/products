@@ -1,12 +1,8 @@
 package com.swiftcart.products.service.impl;
 
-import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,14 +30,6 @@ public class LoginUserServiceImpl implements LoginUserService, UserDetailsServic
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//		LoginUserEntity user = loginUserRepo.findByname(username);
-//		if (user == null) {
-//			throw new UsernameNotFoundException("User not present in db");
-//		}
-//		Collection<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-//				.map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
-//
-//		return new User(user.getName(), user.getPassword(), authorities);
 		LoginUserEntity user = loginUserRepo.findByname(username);
 	    if (user == null) {
 	        throw new UsernameNotFoundException("User not present in db");

@@ -7,8 +7,14 @@ import org.springframework.security.core.userdetails.User;
 
 import com.swiftcart.products.entity.LoginUserEntity;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CustomUserDetails extends User {
     private Long userId;
+    private String email;
 
     public CustomUserDetails(LoginUserEntity user) {
         super(user.getName(), user.getPassword(),
@@ -16,9 +22,6 @@ public class CustomUserDetails extends User {
                   .map(role -> new SimpleGrantedAuthority(role.getName()))
                   .collect(Collectors.toList()));
         this.userId = user.getId();
-    }
-
-    public Long getUserId() {
-        return userId;
+        this.email = user.getEmail();
     }
 }

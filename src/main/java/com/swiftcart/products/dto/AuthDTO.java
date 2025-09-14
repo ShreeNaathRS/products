@@ -12,6 +12,7 @@ import lombok.Setter;
 public class AuthDTO {
 	Long userId;
 	String name;
+	String email;
 	List<String> roles;
 	String token;
 }
