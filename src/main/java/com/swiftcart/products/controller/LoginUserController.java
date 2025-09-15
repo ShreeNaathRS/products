@@ -1,6 +1,7 @@
 package com.swiftcart.products.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,8 +24,13 @@ public class LoginUserController {
 	private LoginUserService userService;
 
 	@PostMapping()
-	public ResponseEntity<Long> createUser(@RequestBody LoginUserEntity userEntity) {
-		return new ResponseEntity<Long>(userService.createUser(userEntity), null, HttpStatus.CREATED);
+	public ResponseEntity<?> createUser(@RequestBody LoginUserEntity userEntity) {
+		try {			
+			Long userId = userService.createUser(userEntity);
+			return new ResponseEntity<Long>(userId, null, HttpStatus.CREATED);
+		} catch(DataIntegrityViolationException ex) {
+	        return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
+		}
 	}
 
 	@GetMapping(path = "/{id}")
