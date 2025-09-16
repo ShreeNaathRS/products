@@ -6,6 +6,8 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.swiftcart.products.entity.OrderProductsEntity;
@@ -58,8 +60,8 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 	
 	@Override
-	public List<OrdersEntity> getOrdersByUserid(Long id) {
-		return ordersRepo.findByuser(id);
+	public Page<OrdersEntity> getOrdersByUserid(Long id, Pageable pageable) {
+		return ordersRepo.findByuser(id, pageable);
 	}
 
 }

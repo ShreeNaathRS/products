@@ -3,6 +3,10 @@ package com.swiftcart.products.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.swiftcart.products.dto.PaginatedResponse;
 import com.swiftcart.products.entity.OrdersEntity;
 import com.swiftcart.products.service.OrdersService;
 
@@ -41,9 +46,11 @@ public class OrdersController {
 	}
 	
 	@GetMapping(path = "/byUser/{id}")
-	public ResponseEntity<List<OrdersEntity>> getOrdersByUserid(@PathVariable Long id) {
-		List<OrdersEntity> entity = ordersService.getOrdersByUserid(id);
-		return new ResponseEntity<List<OrdersEntity>>(entity, null, HttpStatus.OK);
+	public ResponseEntity<PaginatedResponse<OrdersEntity>> getOrdersByUserid(@PathVariable Long id, 
+			@PageableDefault(sort = "createdAt",direction = Sort.Direction.DESC) Pageable pageable) {
+		Page<OrdersEntity> entity = ordersService.getOrdersByUserid(id, pageable);
+		PaginatedResponse<OrdersEntity> paginatedResponse = new PaginatedResponse<>(entity);
+		return new ResponseEntity<PaginatedResponse<OrdersEntity>>(paginatedResponse, null, HttpStatus.OK);
 	}
 
 }
