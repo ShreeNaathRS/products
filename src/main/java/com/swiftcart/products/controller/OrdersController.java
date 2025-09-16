@@ -39,5 +39,11 @@ public class OrdersController {
 		OrdersEntity entity = ordersService.getOrder(id);
 		return new ResponseEntity<OrdersEntity>(entity, null, HttpStatus.OK);
 	}
+	
+	@GetMapping(path = "/byUser/{id}")
+	public ResponseEntity<List<OrdersEntity>> getOrdersByUserid(@PathVariable Long id) {
+		List<OrdersEntity> entity = ordersService.getOrdersByUserid(id);
+		return new ResponseEntity<List<OrdersEntity>>(entity, null, HttpStatus.OK);
+	}
 
 }

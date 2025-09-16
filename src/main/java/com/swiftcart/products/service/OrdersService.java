@@ -11,5 +11,7 @@ public interface OrdersService {
 	List<OrdersEntity> getOrders();
 
 	OrdersEntity getOrder(Long id);
+	
+	List<OrdersEntity> getOrdersByUserid(Long id);
 
 }

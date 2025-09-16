@@ -56,5 +56,10 @@ public class OrdersServiceImpl implements OrdersService {
 		return user.get();
 
 	}
+	
+	@Override
+	public List<OrdersEntity> getOrdersByUserid(Long id) {
+		return ordersRepo.findByuser(id);
+	}
 
 }
