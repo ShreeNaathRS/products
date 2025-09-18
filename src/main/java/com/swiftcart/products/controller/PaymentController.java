@@ -1,10 +1,13 @@
 package com.swiftcart.products.controller;
 
+import static com.swiftcart.products.constants.AuthorityConstants.ADMIN_OR_NORMAL_AUTHORITY;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +19,9 @@ import com.razorpay.RazorpayException;
 
 @RestController
 @RequestMapping("/payment")
+@PreAuthorize(ADMIN_OR_NORMAL_AUTHORITY)
 public class PaymentController {
+	
 	@PostMapping("/create-order")
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) throws RazorpayException {
         int amount = (int) data.get("amount");

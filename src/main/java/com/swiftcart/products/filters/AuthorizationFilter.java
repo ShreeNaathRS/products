@@ -24,10 +24,23 @@ import com.swiftcart.products.constants.APIConstants;
 
 public class AuthorizationFilter extends OncePerRequestFilter {
 	
+	private boolean isAllowedEndPoint(String method, String endpoint) {
+		switch(method) {
+			case "GET":
+				return APIConstants.ALLOWED_GET_END_POINTS.stream()
+						.anyMatch(allowedEndPoint->endpoint.startsWith(allowedEndPoint));
+			case "POST":
+				return APIConstants.ALLOWED_POST_END_POINTS.stream()
+						.anyMatch(allowedEndPoint->endpoint.startsWith(allowedEndPoint));
+			default:
+				return false;
+		}
+	}
+	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		if( APIConstants.ALLOWED_END_POINTS.stream().anyMatch(endpoint -> request.getServletPath().startsWith(endpoint))) {
+		if(isAllowedEndPoint(request.getMethod(), request.getServletPath())) {
 			filterChain.doFilter(request, response);
 		}
 		else {

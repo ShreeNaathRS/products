@@ -1,10 +1,13 @@
 package com.swiftcart.products.controller;
 
+import static com.swiftcart.products.constants.AuthorityConstants.ADMIN_AUTHORITY;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,12 +21,12 @@ import com.swiftcart.products.service.ProductService;
 
 @RestController
 @RequestMapping("/products")
-//@PreAuthorize("hasAuthority('ADMIN')")
 public class ProductsController {
 
 	@Autowired
 	private ProductService productService;
 
+	@PreAuthorize(ADMIN_AUTHORITY)
 	@PostMapping()
 	public ResponseEntity<Long> createProduct(@RequestBody ProductEntity productEntity) {
 		return new ResponseEntity<Long>(productService.createProduct(productEntity), null, HttpStatus.CREATED);
@@ -41,6 +44,7 @@ public class ProductsController {
 		return new ResponseEntity<ProductEntity>(entity, null, HttpStatus.OK);
 	}
 
+	@PreAuthorize(ADMIN_AUTHORITY)
 	@DeleteMapping(path = "/{id}")
 	public ResponseEntity<Boolean> deleteProduct(@PathVariable Long id) {
 		return new ResponseEntity<Boolean>(productService.deleteProduct(id), null, HttpStatus.OK);

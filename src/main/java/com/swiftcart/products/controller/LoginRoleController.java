@@ -1,8 +1,11 @@
 package com.swiftcart.products.controller;
 
+import static com.swiftcart.products.constants.AuthorityConstants.ADMIN_AUTHORITY;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +16,7 @@ import com.swiftcart.products.service.LoginRoleService;
 
 @RestController
 @RequestMapping("/login/role")
-//@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize(ADMIN_AUTHORITY)
 public class LoginRoleController {
 
 	@Autowired

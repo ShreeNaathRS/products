@@ -1,9 +1,12 @@
 package com.swiftcart.products.controller;
 
+import static com.swiftcart.products.constants.AuthorityConstants.ADMIN_AUTHORITY;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,19 +20,19 @@ import com.swiftcart.products.service.LoginUserService;
 
 @RestController
 @RequestMapping("/login")
-//@PreAuthorize("hasAuthority('ADMIN')")
 public class LoginUserController {
 
 	@Autowired
 	private LoginUserService userService;
 
+	@PreAuthorize(ADMIN_AUTHORITY)
 	@PostMapping()
 	public ResponseEntity<?> createUser(@RequestBody LoginUserEntity userEntity) {
-		try {			
+		try {
 			Long userId = userService.createUser(userEntity);
 			return new ResponseEntity<Long>(userId, null, HttpStatus.CREATED);
-		} catch(DataIntegrityViolationException ex) {
-	        return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
+		} catch (DataIntegrityViolationException ex) {
+			return new ResponseEntity<>("User already exists", HttpStatus.CONFLICT);
 		}
 	}
 
@@ -39,6 +42,7 @@ public class LoginUserController {
 		return new ResponseEntity<LoginUserEntity>(entity, null, HttpStatus.OK);
 	}
 
+	@PreAuthorize(ADMIN_AUTHORITY)
 	@DeleteMapping(path = "/{id}")
 	public ResponseEntity<Boolean> deleteUser(@PathVariable Long id) {
 		return new ResponseEntity<Boolean>(userService.deleteUser(id), null, HttpStatus.OK);

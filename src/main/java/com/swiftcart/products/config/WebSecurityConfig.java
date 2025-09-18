@@ -4,13 +4,13 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,7 +21,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.swiftcart.products.constants.APIConstants;
 import com.swiftcart.products.filters.AuthenticationFilter;
 import com.swiftcart.products.filters.AuthorizationFilter;
 
@@ -70,17 +69,15 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(authManager);
         authenticationFilter.setFilterProcessesUrl("/token");
-        ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry authRegistry =
-                http.cors()
-                    .and()
-                    .csrf().disable()
-                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                    .authorizeRequests().anyRequest().permitAll();
-//        for (String endpoint : APIConstants.ALLOWED_END_POINTS) {
-//            authRegistry.antMatchers().permitAll();
-//        }
-//        authRegistry.anyRequest().authenticated();
+        http.cors()
+            .and()
+            .csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeRequests()
+            .antMatchers(HttpMethod.GET, "/category", "/products").permitAll()
+            .antMatchers(HttpMethod.POST, "/login").permitAll()
+            .anyRequest().authenticated();
         http.addFilter(authenticationFilter)
             .addFilterBefore(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();

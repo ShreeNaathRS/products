@@ -4,15 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class APIConstants {
-	public static final List<String> ALLOWED_END_POINTS = new ArrayList<String>() {
+	public static final List<String> ALLOWED_GET_END_POINTS = new ArrayList<String>() {
 		{
 			add("/token");
-			add("/login");
-			add("/products");
 			add("/category");
-			add("/sub-category");
-			add("/payment/create-order");
-			add("/orders");
+			add("/products");
+		}
+	};
+	
+	public static final List<String> ALLOWED_POST_END_POINTS = new ArrayList<String>() {
+		{
+			add("/login");
 		}
 	};
 }

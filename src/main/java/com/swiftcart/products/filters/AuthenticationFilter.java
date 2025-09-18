@@ -16,7 +16,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.auth0.jwt.JWT;
@@ -48,7 +47,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		Long userId = user.getUserId();
 		Algorithm algorithm = Algorithm.HMAC256("Shree-secretKey".getBytes());
 		String token = JWT.create().withSubject(user.getUsername())
-				.withExpiresAt(new Date(System.currentTimeMillis() + (4*60 * 60 * 1000)))
+				.withExpiresAt(new Date(System.currentTimeMillis() + ( 30 * 60 * 1000)))
 				.withIssuer(request.getRequestURL().toString())
 				.withClaim("roles",
 						user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
