@@ -86,14 +86,22 @@ public class DataInitializer implements CommandLineRunner{
 			subCategoryService.createSubCategory(shoeRack);
 		}
 		if(productrepo.count()==0) {
-			ProductEntity product = new ProductEntity();
-			product.setCategory(1L);
-			product.setCompany("Nilkamal");
-			product.setDesc("SLEEP Lite Dual Comfort 5 Inch Mattress | 10 Year Warranty");
-			product.setImageUrl("/nilkamal.jpg");
-			product.setPrice(4569.00);
-			product.setSubCategory(1L);
-			productService.createProduct(product);
+			ProductEntity nilkamal = new ProductEntity();
+			nilkamal.setCategory(1L);
+			nilkamal.setCompany("Nilkamal");
+			nilkamal.setDesc("SLEEP Lite Dual Comfort 5 Inch Mattress | 10 Year Warranty");
+			nilkamal.setImageUrl("/nilkamal.jpg");
+			nilkamal.setPrice(4569.00);
+			nilkamal.setSubCategory(1L);
+			productService.createProduct(nilkamal);
+			ProductEntity livpure = new ProductEntity();
+			livpure.setCategory(1L);
+			livpure.setCompany("Livpure");
+			livpure.setDesc("Smart Lumbar HR Foam Mattress| 3D Sleeptech Zones");
+			livpure.setImageUrl("/livpure.jpg");
+			livpure.setPrice(4669.00);
+			livpure.setSubCategory(1L);
+			productService.createProduct(livpure);
 		}
 		
 	}

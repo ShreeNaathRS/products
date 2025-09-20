@@ -15,7 +15,6 @@ import com.swiftcart.products.entity.OrdersEntity;
 import com.swiftcart.products.entity.ProductEntity;
 import com.swiftcart.products.repo.OrdersRepo;
 import com.swiftcart.products.repo.ProductRepo;
-import com.swiftcart.products.service.OrderProductsService;
 import com.swiftcart.products.service.OrdersService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,6 @@ public class OrdersServiceImpl implements OrdersService {
 	@Autowired
 	private OrdersRepo ordersRepo;
 	
-	@Autowired
-	private OrderProductsService orderProductService;
 	
 	@Autowired
 	private ProductRepo productRepo;

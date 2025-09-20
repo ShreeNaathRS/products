@@ -16,6 +16,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.auth0.jwt.JWT;
@@ -39,6 +41,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		String password = request.getParameter(SPRING_SECURITY_FORM_PASSWORD_KEY);
 		return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
 	}
+	
+	private void setSecurityContext(CustomUserDetails user) {
+		SecurityContext context = SecurityContextHolder.createEmptyContext();
+		Authentication authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), user.getPassword(), user.getAuthorities());
+		context.setAuthentication(authentication);
+		SecurityContextHolder.setContext(context);
+	}
 
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
@@ -52,6 +61,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				.withClaim("roles",
 						user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
 				.sign(algorithm);
+		setSecurityContext(user);
 		AuthDTO auth = new AuthDTO(userId, user.getUsername(),user.getEmail(), user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setStatus(HttpStatus.OK.value());

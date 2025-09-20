@@ -25,7 +25,6 @@ public class LoginUserController {
 	@Autowired
 	private LoginUserService userService;
 
-	@PreAuthorize(ADMIN_AUTHORITY)
 	@PostMapping()
 	public ResponseEntity<?> createUser(@RequestBody LoginUserEntity userEntity) {
 		try {

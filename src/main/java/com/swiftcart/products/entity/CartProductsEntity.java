@@ -17,30 +17,30 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "order_products")
+@Table(name = "cart_products")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderProductsEntity {
+public class CartProductsEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_order_products_id")
-    @SequenceGenerator(name = "seq_order_products_id", initialValue = 1, allocationSize = 1)
-    @Column(name = "ord_prd_id")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_cart_products_id")
+    @SequenceGenerator(name = "seq_cart_products_id", initialValue = 1, allocationSize = 1)
+    @Column(name = "cart_prod_id")
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "ord_prd_ord_id", nullable = false, referencedColumnName = "ord_id")
+    @JoinColumn(name = "cart_prod_cart_id", nullable = false, referencedColumnName = "cart_id")
     @JsonIgnore
-    private OrdersEntity order;
+    private CartEntity cart;
 
     @ManyToOne
-    @JoinColumn(name = "ord_prd_prod_id", nullable = false, referencedColumnName = "prod_id")
+    @JoinColumn(name = "cart_prod_prod_id", nullable = false, referencedColumnName = "prod_id")
     private ProductEntity product;
 
-    @Column(name = "ord_prd_qty", nullable = false)
+    @Column(name = "cart_prod_qty", nullable = false)
     private Integer qty;
 
-    @Column(name = "ord_prd_price", nullable = false)
+    @Column(name = "cart_prod_price", nullable = false)
     private Double price;
 }
