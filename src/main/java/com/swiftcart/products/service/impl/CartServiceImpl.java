@@ -2,6 +2,7 @@ package com.swiftcart.products.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -66,7 +67,7 @@ public class CartServiceImpl implements CartService {
 		List<Long> idsToRemove = existingCart.getProducts().stream()
 				.filter(existing -> incomingCart.getProducts().stream()
 						.noneMatch(incoming -> existing.getId().equals(incoming.getId())))
-				.map(item -> item.getId()).toList();
+				.map(item -> item.getId()).collect(Collectors.toList());
 		existingCart.getProducts().removeIf(existing->idsToRemove.contains(existing.getId()));
 		for (CartProductsEntity incomingItem : incomingCart.getProducts()) {
 			if (incomingItem.getProduct() == null || incomingItem.getProduct().getId() == null) {
