@@ -46,6 +46,9 @@ public class OrdersEntity {
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderProductsEntity> products = new ArrayList<>();
 	
+	@Column(name = "ord_amt")
+	private Double amt;
+	
 	@Column(name = "ord_created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
