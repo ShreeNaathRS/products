@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>17</java.version>
+		<java.version>21</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -66,7 +66,7 @@
 		<dependency>
 	        <groupId>org.projectlombok</groupId>
 	        <artifactId>lombok</artifactId>
-	        <version>1.18.4</version>
+	        <version>1.18.32</version>
 	        <scope>provided</scope>
 	    </dependency>
 	    <!-- RazorPay start-->
@@ -132,10 +132,9 @@
 			<plugin>
 			  <groupId>org.apache.maven.plugins</groupId>
 			  <artifactId>maven-compiler-plugin</artifactId>
-			  <version>3.8.1</version> <!-- downgrade from 3.13.0 -->
+			  <version>3.11.0</version> <!-- Compatible with Java 21 -->
 			  <configuration>
-			    <source>1.8</source>
-			    <target>1.8</target>
+			    <release>21</release>
 			  </configuration>
 			</plugin>
 		</plugins>
