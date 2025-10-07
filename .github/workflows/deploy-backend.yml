@@ -1,29 +1,29 @@
-name: Deploy Spring Boot Backend to EC2
-
-on:
-  push:
-    branches:
-      - master
-      - development
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ github.ref == 'refs/heads/master' && secrets.EC2_KEY || secrets.EC2_KEY_DEV }}
-
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ github.ref == 'refs/heads/master' && secrets.EC2_HOST || secrets.EC2_HOST_DEV }} << 'EOF'
-            cd ${{ secrets.APP_DIR }}
-            git pull origin development
-            mvn clean package -DskipTests
-            sudo systemctl restart springboot-app
-          EOF
+#name: Deploy Spring Boot Backend to EC2
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#      - development
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Set up SSH
+#        uses: webfactory/ssh-agent@v0.7.0
+#        with:
+#          ssh-private-key: ${{ github.ref == 'refs/heads/master' && secrets.EC2_KEY || secrets.EC2_KEY_DEV }}
+#
+#      - name: Deploy to EC2
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ github.ref == 'refs/heads/master' && secrets.EC2_HOST || secrets.EC2_HOST_DEV }} << 'EOF'
+#            cd ${{ secrets.APP_DIR }}
+#            git pull origin development
+#            mvn clean package -DskipTests
+#            sudo systemctl restart springboot-app
+#          EOF
