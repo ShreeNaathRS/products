@@ -3,8 +3,6 @@ package com.swiftcart.products.service.impl;
 import java.util.List;
 import java.util.Optional;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +15,7 @@ import com.swiftcart.products.repo.OrdersRepo;
 import com.swiftcart.products.repo.ProductRepo;
 import com.swiftcart.products.service.OrdersService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service

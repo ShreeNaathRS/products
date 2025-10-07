@@ -69,17 +69,23 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(authManager);
         authenticationFilter.setFilterProcessesUrl("/token");
+
         http.cors()
             .and()
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-            .authorizeRequests()
-            .antMatchers(HttpMethod.GET, "/category", "/products").permitAll()
-            .antMatchers(HttpMethod.POST, "/login").permitAll()
-            .anyRequest().authenticated();
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/category", "/products").permitAll()
+                .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                .anyRequest().authenticated()
+            );
+
         http.addFilter(authenticationFilter)
             .addFilterBefore(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
+
+
 }

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +14,8 @@ import com.swiftcart.products.repo.CartRepo;
 import com.swiftcart.products.repo.ProductRepo;
 import com.swiftcart.products.service.CartService;
 import com.swiftcart.products.util.TokenUtil;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class CartServiceImpl implements CartService {
