@@ -1,13 +1,15 @@
 package com.swiftcart.products.filters;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
 import java.util.stream.Collectors;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,12 +28,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiftcart.products.dto.AuthDTO;
 import com.swiftcart.products.dto.CustomUserDetails;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-	
 	private final AuthenticationManager authenticationManager;
 
 	@Override
@@ -54,20 +59,53 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			Authentication authResult) throws IOException, ServletException {
 		CustomUserDetails user = (CustomUserDetails) authResult.getPrincipal();
 		Long userId = user.getUserId();
-		Algorithm algorithm = Algorithm.HMAC256("Shree-secretKey".getBytes());
-		String token = JWT.create().withSubject(user.getUsername())
-				.withExpiresAt(new Date(System.currentTimeMillis() + ( 30 * 60 * 1000)))
-				.withIssuer(request.getRequestURL().toString())
-				.withClaim("roles",
-						user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
-				.sign(algorithm);
-		setSecurityContext(user);
-		AuthDTO auth = new AuthDTO(userId, user.getUsername(),user.getEmail(), user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
-		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-		response.setStatus(HttpStatus.OK.value());
-	    ObjectMapper mapper = new ObjectMapper();
-	    mapper.writeValue(response.getWriter(), auth);
+		// Load your Auth0 private key and public key (PEM format)
+		RSAPrivateKey privateKey;
+		try {
+			privateKey = loadPrivateKey("private_key.pem");
+			Algorithm algorithm = Algorithm.RSA256(privateKey);
+
+			String token = JWT.create()
+			    .withSubject(user.getUsername())
+			    .withExpiresAt(new Date(System.currentTimeMillis() + (30 * 60 * 1000)))
+			    .withIssuer("https://dev-z98mxvin.us.auth0.com")
+			    .withAudience("https://swiftcart/api")
+			    .withClaim("roles",
+			        user.getAuthorities().stream()
+			            .map(GrantedAuthority::getAuthority)
+			            .collect(Collectors.toList()))
+			    .sign(algorithm);
+
+			setSecurityContext(user);
+			AuthDTO auth = new AuthDTO(userId, user.getUsername(),user.getEmail(), user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response.setStatus(HttpStatus.OK.value());
+		    ObjectMapper mapper = new ObjectMapper();
+		    mapper.writeValue(response.getWriter(), auth);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+	
+	private RSAPrivateKey loadPrivateKey(String filename) throws Exception {
+	    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
+	    if (inputStream == null) {
+	        throw new FileNotFoundException("Resource not found: " + filename);
+	    }
+
+	    // Read the key content
+	    String key = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+	    key = key.replace("-----BEGIN PRIVATE KEY-----", "")
+	             .replace("-----END PRIVATE KEY-----", "")
+	             .replaceAll("\\s", "");
+
+	    // Decode and generate RSA key
+	    byte[] decoded = Base64.getDecoder().decode(key);
+	    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+	    KeyFactory kf = KeyFactory.getInstance("RSA");
+	    return (RSAPrivateKey) kf.generatePrivate(spec);
+	}
+
 
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
