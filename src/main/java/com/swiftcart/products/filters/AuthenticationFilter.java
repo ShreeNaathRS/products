@@ -1,13 +1,7 @@
 package com.swiftcart.products.filters;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -27,6 +21,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiftcart.products.dto.AuthDTO;
 import com.swiftcart.products.dto.CustomUserDetails;
+import com.swiftcart.products.util.TokenUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final AuthenticationManager authenticationManager;
+	private final TokenUtil tokenUtil;
 
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
@@ -59,15 +55,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			Authentication authResult) throws IOException, ServletException {
 		CustomUserDetails user = (CustomUserDetails) authResult.getPrincipal();
 		Long userId = user.getUserId();
-		// Load your Auth0 private key and public key (PEM format)
 		RSAPrivateKey privateKey;
 		try {
-			privateKey = loadPrivateKey("private_key.pem");
+			privateKey = tokenUtil.loadPrivateKey("private_key.pem");
 			Algorithm algorithm = Algorithm.RSA256(privateKey);
 
 			String token = JWT.create()
 			    .withSubject(user.getUsername())
-			    .withExpiresAt(new Date(System.currentTimeMillis() + (30 * 60 * 1000)))
+			    .withExpiresAt(new Date(System.currentTimeMillis() + ( 60 * 60 * 1000)))
 			    .withIssuer("https://dev-z98mxvin.us.auth0.com")
 			    .withAudience("https://swiftcart/api")
 			    .withClaim("roles",
@@ -87,26 +82,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		}
 	}
 	
-	private RSAPrivateKey loadPrivateKey(String filename) throws Exception {
-	    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
-	    if (inputStream == null) {
-	        throw new FileNotFoundException("Resource not found: " + filename);
-	    }
-
-	    // Read the key content
-	    String key = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-	    key = key.replace("-----BEGIN PRIVATE KEY-----", "")
-	             .replace("-----END PRIVATE KEY-----", "")
-	             .replaceAll("\\s", "");
-
-	    // Decode and generate RSA key
-	    byte[] decoded = Base64.getDecoder().decode(key);
-	    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
-	    KeyFactory kf = KeyFactory.getInstance("RSA");
-	    return (RSAPrivateKey) kf.generatePrivate(spec);
-	}
-
-
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException failed) throws IOException, ServletException {

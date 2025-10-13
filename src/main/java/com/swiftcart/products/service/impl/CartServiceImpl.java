@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.swiftcart.products.entity.CartEntity;
@@ -20,14 +19,15 @@ import jakarta.transaction.Transactional;
 @Service
 public class CartServiceImpl implements CartService {
 
-	@Autowired
-	private CartRepo cartRepo;
+	private final CartRepo cartRepo;
+    private final ProductRepo productRepo;
+    private final TokenUtil tokenUtil;
 
-	@Autowired
-	private TokenUtil tokenUtil;
-
-	@Autowired
-	private ProductRepo productRepo;
+    public CartServiceImpl(CartRepo cartRepo, ProductRepo productRepo, TokenUtil tokenUtil) {
+        this.cartRepo = cartRepo;
+        this.productRepo = productRepo;
+        this.tokenUtil = tokenUtil;
+    }
 
 	@Override
 	public CartEntity createCart(CartEntity cart) throws Exception {
@@ -60,7 +60,7 @@ public class CartServiceImpl implements CartService {
 	@Override
 	@Transactional
 	public CartEntity updateCart(CartEntity incomingCart) throws Exception {
-		Long userId = tokenUtil.getLoggedInUser().getId();
+		Long userId = tokenUtil.getLoggedInUserFromCustomContext().getId();
 		CartEntity existingCart = cartRepo.findByuser(userId)
 				.orElseThrow(() -> new Exception("Cart not found for user"));
 		List<CartProductsEntity> existingProducts = existingCart.getProducts();
@@ -94,7 +94,7 @@ public class CartServiceImpl implements CartService {
 
 	@Override
 	public CartEntity getCart() throws Exception {
-		Long userId = tokenUtil.getLoggedInUser().getId();
+		Long userId = tokenUtil.getLoggedInUserFromCustomContext().getId();
 		return cartRepo.findByuser(userId).orElseGet(() -> {return null;});
 	}
 
