@@ -1,14 +1,18 @@
 package com.swiftcart.products.filters;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -22,8 +26,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiftcart.products.dto.AuthDTO;
 import com.swiftcart.products.dto.CustomUserDetails;
@@ -56,36 +59,73 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
-			Authentication authResult) throws IOException, ServletException {
-		CustomUserDetails user = (CustomUserDetails) authResult.getPrincipal();
-		Long userId = user.getUserId();
-		// Load your Auth0 private key and public key (PEM format)
-		RSAPrivateKey privateKey;
-		try {
-			privateKey = loadPrivateKey("private_key.pem");
-			Algorithm algorithm = Algorithm.RSA256(privateKey);
+	        Authentication authResult) throws IOException, ServletException {
 
-			String token = JWT.create()
-			    .withSubject(user.getUsername())
-			    .withExpiresAt(new Date(System.currentTimeMillis() + (30 * 60 * 1000)))
-			    .withIssuer("https://dev-z98mxvin.us.auth0.com")
-			    .withAudience("https://swiftcart/api")
-			    .withClaim("roles",
-			        user.getAuthorities().stream()
-			            .map(GrantedAuthority::getAuthority)
-			            .collect(Collectors.toList()))
-			    .sign(algorithm);
+	    CustomUserDetails user = (CustomUserDetails) authResult.getPrincipal();
+	    Long userId = user.getUserId();
 
-			setSecurityContext(user);
-			AuthDTO auth = new AuthDTO(userId, user.getUsername(),user.getEmail(), user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()), token);
-			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			response.setStatus(HttpStatus.OK.value());
-		    ObjectMapper mapper = new ObjectMapper();
-		    mapper.writeValue(response.getWriter(), auth);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	    try {
+	        // Prepare Auth0 token request
+	        URL url = new URL("https://dev-z98mxvin.us.auth0.com/oauth/token");
+	        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+	        connection.setRequestMethod("POST");
+	        connection.setRequestProperty("Content-Type", "application/json");
+	        connection.setDoOutput(true);
+
+	        // Build request payload
+	        String payload = """
+	        {
+	            "client_id": "CURxekaby5KfeiIgCQTtzoayS4t1pOjP",
+	            "client_secret": "rm4vLoysGC7-WhGP7u3dKFCJGlW2b05PfB61xyc4wrPUfmDFAlZDeZg8c7-760F2",
+	            "audience": "https://swiftcart/api",
+	            "grant_type": "client_credentials",
+	            "scope": "write:cart"
+	        }
+	        """;
+
+	        // Send request
+	        try (OutputStream os = connection.getOutputStream()) {
+	            byte[] input = payload.getBytes(StandardCharsets.UTF_8);
+	            os.write(input, 0, input.length);
+	        }
+
+	        // Read response
+	        String token;
+	        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+	            StringBuilder responseBody = new StringBuilder();
+	            String responseLine;
+	            while ((responseLine = br.readLine()) != null) {
+	                responseBody.append(responseLine.trim());
+	            }
+
+	            // Extract token from JSON response
+	            ObjectMapper mapper = new ObjectMapper();
+	            JsonNode jsonNode = mapper.readTree(responseBody.toString());
+	            token = jsonNode.get("access_token").asText();
+	        }
+
+	        // Set security context and return token
+	        setSecurityContext(user);
+	        AuthDTO auth = new AuthDTO(
+	            userId,
+	            user.getUsername(),
+	            user.getEmail(),
+	            user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()),
+	            token
+	        );
+
+	        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+	        response.setStatus(HttpStatus.OK.value());
+	        ObjectMapper mapper = new ObjectMapper();
+	        mapper.writeValue(response.getWriter(), auth);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+	        response.getWriter().write("Token generation failed");
+	    }
 	}
+
 	
 	private RSAPrivateKey loadPrivateKey(String filename) throws Exception {
 	    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);

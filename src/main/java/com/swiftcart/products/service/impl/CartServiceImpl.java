@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.swiftcart.products.entity.CartEntity;
@@ -20,89 +19,100 @@ import jakarta.transaction.Transactional;
 @Service
 public class CartServiceImpl implements CartService {
 
-	@Autowired
-	private CartRepo cartRepo;
+    private final CartRepo cartRepo;
+    private final ProductRepo productRepo;
+    private final TokenUtil tokenUtil;
 
-	@Autowired
-	private TokenUtil tokenUtil;
+    public CartServiceImpl(CartRepo cartRepo, ProductRepo productRepo, TokenUtil tokenUtil) {
+        this.cartRepo = cartRepo;
+        this.productRepo = productRepo;
+        this.tokenUtil = tokenUtil;
+    }
 
-	@Autowired
-	private ProductRepo productRepo;
+    @Transactional
+    @Override
+    public CartEntity createCart(CartEntity cart) throws Exception {
+        List<CartProductsEntity> newProducts = new ArrayList<>();
 
-	@Override
-	public CartEntity createCart(CartEntity cart) throws Exception {
-		List<CartProductsEntity> newProducts = new ArrayList<>();
+        for (CartProductsEntity item : cart.getProducts()) {
+            Long productId = item.getProduct() != null ? item.getProduct().getId() : null;
+            if (productId == null) {
+                throw new IllegalArgumentException("Product must be provided with a valid ID");
+            }
 
-		for (CartProductsEntity item : cart.getProducts()) {
-			if (item.getProduct() == null || item.getProduct().getId() == null) {
-				throw new Exception("Product must be provided with a valid ID");
-			}
+            ProductEntity managedProduct = productRepo.findById(productId)
+                    .orElseThrow(() -> new Exception("Product not found"));
 
-			CartProductsEntity newItem = new CartProductsEntity();
-			newItem.setId(null); // ensure it's treated as new
-			newItem.setCart(cart);
+            CartProductsEntity newItem = new CartProductsEntity();
+            newItem.setCart(cart);
+            newItem.setProduct(managedProduct);
+            newItem.setQty(item.getQty());
+            newItem.setPrice(item.getPrice());
 
-			ProductEntity managedProduct = productRepo.findById(item.getProduct().getId())
-					.orElseThrow(() -> new Exception("Product not found"));
-			newItem.setProduct(managedProduct);
+            newProducts.add(newItem);
+        }
 
-			newItem.setQty(item.getQty());
-			newItem.setPrice(item.getPrice());
+        cart.setProducts(newProducts);
+        return cartRepo.save(cart);
+    }
 
-			newProducts.add(newItem);
-		}
+    @Override
+    @Transactional
+    public CartEntity updateCart(CartEntity incomingCart) throws Exception {
+    	Long userId = tokenUtil.getLoggedInUserFromContext().getId();
+        CartEntity existingCart = cartRepo.findByuser(userId)
+                .orElseThrow(() -> new Exception("Cart not found for user"));
 
-		cart.setProducts(newProducts); // replace with clean, transient list
+        List<CartProductsEntity> existingProducts = existingCart.getProducts();
+        List<Long> incomingIds = incomingCart.getProducts().stream()
+                .map(CartProductsEntity::getId)
+                .collect(Collectors.toList());
 
-		return cartRepo.save(cart);
-	}
+        existingProducts.removeIf(existing -> !incomingIds.contains(existing.getId()));
 
-	@Override
-	@Transactional
-	public CartEntity updateCart(CartEntity incomingCart) throws Exception {
-		Long userId = tokenUtil.getLoggedInUser().getId();
-		CartEntity existingCart = cartRepo.findByuser(userId)
-				.orElseThrow(() -> new Exception("Cart not found for user"));
-		List<CartProductsEntity> existingProducts = existingCart.getProducts();
-		List<Long> idsToRemove = existingCart.getProducts().stream()
-				.filter(existing -> incomingCart.getProducts().stream()
-						.noneMatch(incoming -> existing.getId().equals(incoming.getId())))
-				.map(item -> item.getId()).collect(Collectors.toList());
-		existingCart.getProducts().removeIf(existing->idsToRemove.contains(existing.getId()));
-		for (CartProductsEntity incomingItem : incomingCart.getProducts()) {
-			if (incomingItem.getProduct() == null || incomingItem.getProduct().getId() == null) {
-				throw new Exception("Product must be provided with a valid ID");
-			}
-			ProductEntity managedProduct = productRepo.findById(incomingItem.getProduct().getId())
-					.orElseThrow(() -> new Exception("Product not found"));
-			CartProductsEntity match = existingProducts.stream()
-					.filter(p -> p.getProduct().getId().equals(managedProduct.getId())).findFirst().orElse(null);
-			if (match != null) {
-				match.setQty(incomingItem.getQty());
-				match.setPrice(incomingItem.getPrice());
-			} else {
-				CartProductsEntity newItem = new CartProductsEntity();
-				newItem.setCart(existingCart);
-				newItem.setProduct(managedProduct);
-				newItem.setQty(incomingItem.getQty());
-				newItem.setPrice(incomingItem.getPrice());
-				existingProducts.add(newItem);
-			}
-		}
-		return cartRepo.save(existingCart);
-	}
+        for (CartProductsEntity incomingItem : incomingCart.getProducts()) {
+            Long productId = incomingItem.getProduct() != null ? incomingItem.getProduct().getId() : null;
+            if (productId == null) {
+                throw new IllegalArgumentException("Product must be provided with a valid ID");
+            }
 
-	@Override
-	public CartEntity getCart() throws Exception {
-		Long userId = tokenUtil.getLoggedInUser().getId();
-		return cartRepo.findByuser(userId).orElseGet(() -> {return null;});
-	}
+            ProductEntity managedProduct = productRepo.findById(productId)
+                    .orElseThrow(() -> new Exception("Product not found"));
 
-	@Override
-	public Long deleteCart() throws Exception {
-		CartEntity cart = getCart();
-		cartRepo.deleteById(cart.getId());
-		return cart.getId();
-	}
+            CartProductsEntity match = existingProducts.stream()
+                    .filter(p -> p.getProduct().getId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
 
+            if (match != null) {
+                match.setQty(incomingItem.getQty());
+                match.setPrice(incomingItem.getPrice());
+            } else {
+                CartProductsEntity newItem = new CartProductsEntity();
+                newItem.setCart(existingCart);
+                newItem.setProduct(managedProduct);
+                newItem.setQty(incomingItem.getQty());
+                newItem.setPrice(incomingItem.getPrice());
+                existingProducts.add(newItem);
+            }
+        }
+
+        return cartRepo.save(existingCart);
+    }
+
+    @Override
+    public CartEntity getCart() throws Exception {
+        Long userId = tokenUtil.getLoggedInUserFromContext().getId();
+        return cartRepo.findByuser(userId).orElse(null);
+    }
+
+    @Override
+    public Long deleteCart() throws Exception {
+        CartEntity cart = getCart();
+        if (cart == null) {
+            throw new Exception("No cart found to delete");
+        }
+        cartRepo.deleteById(cart.getId());
+        return cart.getId();
+    }
 }

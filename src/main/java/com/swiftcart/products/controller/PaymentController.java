@@ -23,7 +23,7 @@ import com.razorpay.RazorpayException;
 public class PaymentController {
 	
 	@PostMapping("/create-order")
-    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) throws RazorpayException {
+    public ResponseEntity<?> createPayment(@RequestBody Map<String, Object> data) throws RazorpayException {
         int amount = (int) data.get("amount");
 
         RazorpayClient razorpay = new RazorpayClient("rzp_test_RGE8UNieYQNDVG", "Ns6NFX2iPXkGMBaf5oArUXbr");

@@ -33,13 +33,13 @@ public class CartProductsController {
 
 	@PutMapping()
 	public ResponseEntity<CartProductsEntity> updateCartProduct(@RequestBody CartProductsEntity cartProduct) throws Exception{
-		LoginUserEntity loginUser = tokenUtil.getLoggedInUser();
+		LoginUserEntity loginUser = tokenUtil.getLoggedInUserFromContext();
 		return new ResponseEntity<CartProductsEntity>(cartProductsService.updateCartProduct(loginUser.getId(), cartProduct), null, HttpStatus.OK);
 	}
 
 	@DeleteMapping("/{cartProductId}")
 	public ResponseEntity<String> deleteCartProduct(@PathVariable Long cartProductId) throws Exception{
-		LoginUserEntity loginUser = tokenUtil.getLoggedInUser();
+		LoginUserEntity loginUser = tokenUtil.getLoggedInUserFromContext();
 		cartProductsService.deleteCartProduct(loginUser.getId(), cartProductId);
 		return new ResponseEntity<String>("Deleted", null, HttpStatus.OK);
 	}

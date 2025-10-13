@@ -28,7 +28,7 @@ public class CategoryController {
 
 	@PreAuthorize(ADMIN_AUTHORITY)
 	@PostMapping()
-	public ResponseEntity<Long> createProduct(@RequestBody CategoryEntity categoryEntity) {
+	public ResponseEntity<Long> createCategory(@RequestBody CategoryEntity categoryEntity) {
 		return new ResponseEntity<Long>(categoryService.createCategory(categoryEntity), null, HttpStatus.CREATED);
 	}
 
@@ -39,14 +39,14 @@ public class CategoryController {
 	}
 
 	@GetMapping(path = "/{id}")
-	public ResponseEntity<CategoryEntity> getUser(@PathVariable Long id) {
+	public ResponseEntity<CategoryEntity> getCategory(@PathVariable Long id) {
 		CategoryEntity entity = categoryService.getCategory(id);
 		return new ResponseEntity<CategoryEntity>(entity, null, HttpStatus.OK);
 	}
 
 	@PreAuthorize(ADMIN_AUTHORITY)
 	@DeleteMapping(path = "/{id}")
-	public ResponseEntity<Boolean> deleteUser(@PathVariable Long id) {
+	public ResponseEntity<Boolean> deleteCategory(@PathVariable Long id) {
 		return new ResponseEntity<Boolean>(categoryService.deleteCategory(id), null, HttpStatus.OK);
 	}
 
