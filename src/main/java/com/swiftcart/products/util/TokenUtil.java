@@ -31,12 +31,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiftcart.products.entity.LoginUserEntity;
 import com.swiftcart.products.repo.LoginUserRepo;
 
@@ -47,6 +50,8 @@ public class TokenUtil {
 	
 	@Autowired
 	private LoginUserRepo loginUserRepo;
+	@Autowired
+	private ObjectMapper objectMapper;
 	
 	private HttpServletRequest getRequest() {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -186,40 +191,65 @@ public class TokenUtil {
         };
     }
 	
-	public <T> Function<Message<T>, ?> authorized(Function<T, ResponseEntity<?>> handler, String requiredAuthority) {
-	    return message -> {
+	public <T> Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> authorized(
+	        Class<T> payloadType,
+	        Function<T, ResponseEntity<?>> handler,
+	        String requiredAuthority) {
+
+	    return request -> {
 	        try {
-	            if (message == null || message.getHeaders() == null) {
-	                return "Missing message or headers";
+	            if (request == null || request.getHeaders() == null) {
+	                return buildPlainResponse(400, "Missing request or headers");
 	            }
 
-	            Message<T> normalizedMessage = getNormalizedMessage(message);
-	            Object contentTypeHeader = normalizedMessage.getHeaders().get("Content-Type");
-	            if (contentTypeHeader == null) {
-	                return "Missing 'Content-Type' header";
+	            Map<String, String> headers = request.getHeaders();
+	            String contentType = headers.getOrDefault("Content-Type", headers.getOrDefault("content-type", ""));
+	            if (!"application/json".equalsIgnoreCase(contentType)) {
+	                return buildPlainResponse(415, "Unsupported Content-Type: " + contentType);
 	            }
 
-	            String contentType = contentTypeHeader.toString();
-	            if (!contentType.equalsIgnoreCase("application/json")) {
-	                return "Unsupported Content-Type: " + contentType;
+	            String bearerToken = headers.getOrDefault("Authorization", headers.getOrDefault("authorization", null));
+	            if (bearerToken == null) {
+	                return buildPlainResponse(401, "Missing Authorization header");
 	            }
-
-	            String token = (String) normalizedMessage.getHeaders().get("Authorization");
+	            String token = bearerToken.substring(7);
 	            DecodedJWT jwt = verifyToken(token, requiredAuthority);
 	            LoginUserEntity user = loginUserRepo.findByname(jwt.getSubject());
 	            RequestContext.setUser(user);
-
-	            ResponseEntity<?> response = handler.apply(normalizedMessage.getPayload());
-	            return response.getBody();
+	            T payload = request.getBody() == null? null: objectMapper.readValue(request.getBody(), payloadType);
+	            ResponseEntity<?> response = handler.apply(payload);
+	            return buildJsonResponse(response);
 
 	        } catch (JWTVerificationException | AccessDeniedException e) {
-	            return e.getMessage();
+	            return buildPlainResponse(403, e.getMessage());
 	        } catch (Exception e) {
 	            e.printStackTrace();
-	            return "Unexpected error: " + e.getMessage();
+	            return buildPlainResponse(500, "Unexpected error: " + e.getMessage());
+	        } finally {
+	            RequestContext.clear();
 	        }
 	    };
 	}
+
+	
+	private APIGatewayProxyResponseEvent buildPlainResponse(int statusCode, String message) {
+	    return new APIGatewayProxyResponseEvent()
+	            .withStatusCode(statusCode)
+	            .withBody(message);
+	}
+
+	private APIGatewayProxyResponseEvent buildJsonResponse(ResponseEntity<?> response) {
+	    try {
+	        return new APIGatewayProxyResponseEvent()
+	                .withStatusCode(response.getStatusCodeValue())
+	                .withBody(objectMapper.writeValueAsString(response.getBody()))
+	                .withHeaders(Map.of("Content-Type", "application/json"));
+	    } catch (Exception e) {
+	        return buildPlainResponse(500, "Serialization error: " + e.getMessage());
+	    }
+	}
+
+
 	
 	private <T> Message<T> getNormalizedMessage(Message<T> message) {
 		Map<String, Object> normalizedHeaders = new HashMap<>();

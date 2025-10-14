@@ -95,7 +95,6 @@ public class CartServiceImpl implements CartService {
 	@Override
 	public CartEntity getCart() throws Exception {
 		Long userId = tokenUtil.getLoggedInUserFromCustomContext().getId();
-		System.out.println("Userid = "+userId);
 		return cartRepo.findByuser(userId).orElseGet(() -> {return null;});
 	}
 
