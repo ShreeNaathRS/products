@@ -1,11 +1,8 @@
 package com.swiftcart.products.controller;
 
-import static com.swiftcart.products.constants.AuthorityConstants.ADMIN_OR_NORMAL_AUTHORITY;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +16,7 @@ import com.swiftcart.products.service.CartService;
 
 @RestController
 @RequestMapping("/cart")
-@PreAuthorize(ADMIN_OR_NORMAL_AUTHORITY)
+//@PreAuthorize(ADMIN_OR_NORMAL_AUTHORITY)
 public class CartController {
 
 	@Autowired
@@ -37,7 +34,8 @@ public class CartController {
 
 	@GetMapping()
 	public ResponseEntity<CartEntity> getCart() throws Exception {
-		return new ResponseEntity<CartEntity>(cartService.getCart(), null, HttpStatus.OK);
+		CartEntity cart = cartService.getCart();
+		return ResponseEntity.ok(cart);
 	}
 
 	@DeleteMapping()

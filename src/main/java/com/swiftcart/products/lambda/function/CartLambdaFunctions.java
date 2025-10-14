@@ -1,7 +1,6 @@
 package com.swiftcart.products.lambda.function;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
@@ -33,52 +32,80 @@ public class CartLambdaFunctions {
 	}
 
 	@Bean
-	public Function<CartEntity, ResponseEntity<?>> createCart() {
-		return cart -> {
-			try {
-				return new ResponseEntity<CartEntity>(cartService.createCart(cart), null, HttpStatus.CREATED);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return responseEntityUtil.getErrorResponseEntity(new ErrorResponse(CartEntity.class, RequestMethod.POST, "createCart"));
-			}
-		};
+	public Function<Message<CartEntity>, ?> createCart() {
+	    return tokenUtil.authorized(cart -> {
+	        try {
+	            return ResponseEntity.status(HttpStatus.CREATED).body(cartService.createCart(cart));
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return responseEntityUtil.getErrorResponseEntity(
+	                new ErrorResponse(CartEntity.class, RequestMethod.POST, "createCart")
+	            );
+	        }
+	    }, "ADMIN,NORMAL");
 	}
 
 	@Bean
-	public Function<Message<CartEntity>, ResponseEntity<?>> updateCart() {
-		return tokenUtil.authorized(cart -> {
-			try {
-				return new ResponseEntity<CartEntity>(cartService.updateCart(cart), null, HttpStatus.OK);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return responseEntityUtil.getErrorResponseEntity(new ErrorResponse(CartEntity.class, RequestMethod.PUT, "updateCart"));
-			} finally {
-				RequestContext.clear();
-			}
-		}, "ADMIN");
+	public Function<Message<CartEntity>, ?> updateCart() {
+	    return tokenUtil.authorized(cart -> {
+	        try {
+	            return ResponseEntity.ok(cartService.updateCart(cart));
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return responseEntityUtil.getErrorResponseEntity(
+	                new ErrorResponse(CartEntity.class, RequestMethod.PUT, "updateCart")
+	            );
+	        } finally {
+	            RequestContext.clear();
+	        }
+	    }, "ADMIN,NORMAL");
 	}
 
-	@Bean
-	public Supplier<ResponseEntity<?>> getCart() {
-		return () -> {
-			try {
-				return new ResponseEntity<CartEntity>(cartService.getCart(), null, HttpStatus.OK);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return responseEntityUtil.getErrorResponseEntity(new ErrorResponse(CartEntity.class, RequestMethod.GET, "getCart"));
-			}
-		};
-	}
 
 	@Bean
-	public Supplier<ResponseEntity<Long>> deleteCart() {
-		return () -> {
-			try {
-				return new ResponseEntity<Long>(cartService.deleteCart(), null, HttpStatus.OK);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return new ResponseEntity<Long>(0L, null, HttpStatus.BAD_REQUEST);
-			}
-		};
+	public Function<Message<Object>, Object> getCart() {
+	    return message -> {
+	        try {
+	            return tokenUtil.authorized(
+	                payload -> {
+	                    try {
+	                        return ResponseEntity.ok(cartService.getCart());
+	                    } catch (Exception e) {
+	                        e.printStackTrace();
+	                        return responseEntityUtil.getErrorResponseEntity(
+	                            new ErrorResponse(CartEntity.class, RequestMethod.GET, "getCart")
+	                        );
+	                    }
+	                },
+	                "ADMIN,NORMAL"
+	            ).apply(message);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return "Unexpected error: " + e.getMessage();
+	        }
+	    };
 	}
+
+
+	@Bean
+	public Function<Message<Object>, Object> deleteCart() {
+	    return message -> {
+	        try {
+	            return tokenUtil.authorized(msg -> {
+	                try {
+	                    Long deletedId = cartService.deleteCart();
+	                    return new ResponseEntity<>(deletedId, HttpStatus.OK);
+	                } catch (Exception e) {
+	                    e.printStackTrace();
+	                    return new ResponseEntity<>(0L, HttpStatus.BAD_REQUEST);
+	                }
+	            }, "ADMIN,NORMAL").apply(message);
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
+	        }
+	    };
+	}
+
 }
